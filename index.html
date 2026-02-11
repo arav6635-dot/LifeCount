@@ -1,0 +1,556 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LifeClock</title>
+  <style>
+    :root {
+      --bg: #060b14;
+      --surface: #0e1730;
+      --surface-2: #111d38;
+      --line: #23416d;
+      --ink: #e8f1ff;
+      --muted: #9db5d8;
+      --blue-1: #7dd3fc;
+      --blue-2: #38bdf8;
+      --blue-3: #0ea5e9;
+      --warn: #f59e0b;
+      --shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+      --radius: 18px;
+    }
+x
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Space Grotesk", "Avenir Next", "Segoe UI", sans-serif;
+      color: var(--ink);
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 10% 12%, rgba(125, 211, 252, 0.2), transparent 30%),
+        radial-gradient(circle at 92% 18%, rgba(56, 189, 248, 0.2), transparent 28%),
+        linear-gradient(160deg, #040712 0%, #081225 60%, #091634 100%);
+      padding: 24px;
+    }
+
+    .shell {
+      max-width: 1280px;
+      margin: 0 auto;
+      display: grid;
+      gap: 18px;
+    }
+
+    .hero {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: linear-gradient(120deg, #0b1329 0%, #12224a 100%);
+      box-shadow: var(--shadow);
+      padding: 24px;
+    }
+
+    .hero h1 {
+      margin: 0;
+      font-size: clamp(1.8rem, 2.9vw, 2.8rem);
+      letter-spacing: -0.02em;
+    }
+
+    .hero p {
+      margin: 10px 0 0;
+      color: #c0d6f5;
+      max-width: 900px;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 390px 1fr;
+      gap: 18px;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(14, 23, 48, 0.93);
+      box-shadow: var(--shadow);
+      padding: 16px;
+    }
+
+    .panel h2 {
+      margin: 0 0 12px;
+      font-size: 1.1rem;
+    }
+
+    .section-title {
+      margin: 14px 0 8px;
+      font-weight: 700;
+      color: #cfe3ff;
+      letter-spacing: 0.01em;
+    }
+
+    .field { margin-bottom: 10px; }
+    .field {
+      display: flex;
+      flex-direction: column;
+    }
+    .row {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 2px;
+      align-items: end;
+    }
+    .row.two { grid-template-columns: 1fr 1fr; }
+    .row.three { grid-template-columns: 1fr 1fr 1fr; }
+
+    .field label {
+      font-size: 0.9rem;
+      color: var(--muted);
+      display: block;
+      margin-bottom: 6px;
+      min-height: 2.4em;
+      line-height: 1.2;
+    }
+
+    .field input {
+      width: 100%;
+      border: 1px solid #31588a;
+      border-radius: 12px;
+      background: #09132a;
+      color: var(--ink);
+      padding: 10px 12px;
+      font-size: 0.98rem;
+    }
+
+    .field input:focus {
+      outline: 2px solid var(--blue-2);
+      outline-offset: 1px;
+      border-color: transparent;
+    }
+
+    .note {
+      margin-top: 10px;
+      font-size: 0.84rem;
+      color: #b5cbec;
+      background: #10213f;
+      border: 1px solid #264977;
+      border-radius: 10px;
+      padding: 9px 10px;
+    }
+
+    .note.warn {
+      color: #f5d9a3;
+      background: #3e2d0d;
+      border-color: #7e5c16;
+    }
+
+    .dash {
+      display: grid;
+      gap: 14px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    .stat {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--surface);
+      padding: 12px;
+    }
+
+    .stat small {
+      display: block;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      font-size: 0.74rem;
+      margin-bottom: 8px;
+    }
+
+    .stat strong {
+      font-size: 1.8rem;
+      letter-spacing: -0.03em;
+    }
+
+    .stat .sub {
+      margin-top: 6px;
+      color: #b8cff0;
+      font-size: 0.85rem;
+    }
+
+    .viz {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--surface);
+      padding: 12px;
+    }
+
+    .card h3 {
+      margin: 0 0 8px;
+      font-size: 0.95rem;
+      letter-spacing: 0.02em;
+      color: #c9dcfa;
+    }
+
+    .blocks {
+      display: grid;
+      grid-template-columns: repeat(20, minmax(10px, 1fr));
+      gap: 5px;
+    }
+
+    .b {
+      aspect-ratio: 1 / 1;
+      border-radius: 4px;
+      background: #1f3560;
+    }
+
+    .b.lived { background: #dbeafe; }
+    .b.future { background: linear-gradient(180deg, var(--blue-1), var(--blue-2)); }
+
+    .legend {
+      display: flex;
+      gap: 14px;
+      margin-top: 8px;
+      color: #a8c1e5;
+      font-size: 0.84rem;
+    }
+
+    .dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 5px;
+      vertical-align: middle;
+    }
+
+    .breakdown {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 6px;
+      font-size: 0.9rem;
+    }
+
+    .list li {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      border-bottom: 1px dashed #294976;
+      padding-bottom: 4px;
+      color: #c8dcfa;
+    }
+
+    .pos { color: #7dd3fc; }
+    .neg { color: #fda4af; }
+
+    @media (max-width: 1080px) {
+      .layout { grid-template-columns: 1fr; }
+      .stats { grid-template-columns: repeat(2, 1fr); }
+      .viz, .breakdown { grid-template-columns: 1fr; }
+      .row.two, .row.three { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="hero">
+      <h1>LifeClock</h1>
+      <p>Compare your current routine against a healthier target. This is a behavior-based estimate model, not medical advice. Every number below is shown with the exact formula so it stays understandable.</p>
+    </section>
+
+    <section class="layout">
+      <aside class="panel">
+        <h2>Inputs</h2>
+
+        <div class="section-title">Current Routine</div>
+        <div class="row three">
+          <div class="field"><label for="age">Age</label><input id="age" type="number" min="1" max="100" value="28" /></div>
+          <div class="field"><label for="sleep">Sleep hours/day</label><input id="sleep" type="number" min="0" max="14" step="0.5" value="6.5" /></div>
+          <div class="field"><label for="work">Work hours/day</label><input id="work" type="number" min="0" max="16" step="0.5" value="9" /></div>
+        </div>
+        <div class="row two">
+          <div class="field"><label for="screen">Phone screen time/day</label><input id="screen" type="number" min="0" max="12" step="0.5" value="4" /></div>
+          <div class="field"><label for="commute">Commute hours/day</label><input id="commute" type="number" min="0" max="6" step="0.5" value="1" /></div>
+        </div>
+
+        <div class="section-title">Health Factors (Current)</div>
+        <div class="row three">
+          <div class="field"><label for="aqi">Average AQI</label><input id="aqi" type="number" min="0" max="500" value="95" /></div>
+          <div class="field"><label for="diet">Eating quality (1-10)</label><input id="diet" type="number" min="1" max="10" step="1" value="5" /></div>
+          <div class="field"><label for="exercise">Exercise mins/day</label><input id="exercise" type="number" min="0" max="180" value="15" /></div>
+        </div>
+        <div class="row two">
+          <div class="field"><label for="stress">Stress level (1-10)</label><input id="stress" type="number" min="1" max="10" step="1" value="7" /></div>
+          <div class="field"><label for="smoke">Cigarettes/day</label><input id="smoke" type="number" min="0" max="40" step="1" value="0" /></div>
+        </div>
+
+        <div class="section-title">Healthy Target (Editable)</div>
+        <div class="row three">
+          <div class="field"><label for="tSleep">Target sleep/day</label><input id="tSleep" type="number" min="0" max="14" step="0.5" value="8" /></div>
+          <div class="field"><label for="tScreen">Target phone/day</label><input id="tScreen" type="number" min="0" max="12" step="0.5" value="1.5" /></div>
+          <div class="field"><label for="tDiet">Target eating quality (1-10)</label><input id="tDiet" type="number" min="1" max="10" step="1" value="8" /></div>
+        </div>
+        <div class="row three">
+          <div class="field"><label for="tExercise">Target exercise mins/day</label><input id="tExercise" type="number" min="0" max="180" value="45" /></div>
+          <div class="field"><label for="tStress">Target stress (1-10)</label><input id="tStress" type="number" min="1" max="10" step="1" value="4" /></div>
+          <div class="field"><label for="tSmoke">Target cigarettes/day</label><input id="tSmoke" type="number" min="0" max="40" step="1" value="0" /></div>
+        </div>
+        <div class="row two">
+          <div class="field"><label for="tAqi">Target AQI (optional)</label><input id="tAqi" type="number" min="0" max="500" placeholder="same as current" /></div>
+        </div>
+
+        <div class="note" id="statusLine">Formula: free = 24 - (sleep + work + commute), people = free - phone.</div>
+      </aside>
+
+      <section class="dash">
+        <div class="stats">
+          <article class="stat">
+            <small>Current Life Expectancy</small>
+            <strong id="lifeNow">0.0y</strong>
+            <div class="sub" id="freeNow">Free 0.0h/day</div>
+          </article>
+          <article class="stat">
+            <small>Healthy Target Expectancy</small>
+            <strong id="lifeTarget">0.0y</strong>
+            <div class="sub" id="freeTarget">Free 0.0h/day</div>
+          </article>
+          <article class="stat">
+            <small>Potential Gain</small>
+            <strong id="gainYears">0.0y</strong>
+            <div class="sub" id="yearsLeft">0.0 years left from current</div>
+          </article>
+          <article class="stat">
+            <small>Phone vs People (Current)</small>
+            <strong id="phonePeople">0.0h : 0.0h</strong>
+            <div class="sub" id="phonePeopleTarget">Target 0.0h : 0.0h</div>
+          </article>
+        </div>
+
+        <div class="viz">
+          <article class="card">
+            <h3>Current Timeline (100 years)</h3>
+            <div class="blocks" id="gridCurrent"></div>
+            <div class="legend">
+              <span><span class="dot" style="background:#dbeafe;"></span>already lived</span>
+              <span><span class="dot" style="background:#38bdf8;"></span>projected lifespan</span>
+              <span><span class="dot" style="background:#1f3560;"></span>beyond projection</span>
+            </div>
+          </article>
+          <article class="card">
+            <h3>Healthy Target Timeline (100 years)</h3>
+            <div class="blocks" id="gridTarget"></div>
+            <div class="legend">
+              <span><span class="dot" style="background:#dbeafe;"></span>already lived</span>
+              <span><span class="dot" style="background:#7dd3fc;"></span>projected lifespan</span>
+              <span><span class="dot" style="background:#1f3560;"></span>beyond projection</span>
+            </div>
+          </article>
+        </div>
+
+        <div class="breakdown">
+          <article class="card">
+            <h3>Current Factor Impact (years)</h3>
+            <ul class="list" id="listNow"></ul>
+          </article>
+          <article class="card">
+            <h3>Healthy Target Factor Impact (years)</h3>
+            <ul class="list" id="listTarget"></ul>
+          </article>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script>
+    const allIds = [
+      "age", "sleep", "work", "screen", "commute", "aqi", "diet", "exercise", "stress", "smoke",
+      "tSleep", "tScreen", "tDiet", "tExercise", "tStress", "tSmoke", "tAqi"
+    ];
+
+    function clamp(n, min, max) {
+      return Math.max(min, Math.min(max, n));
+    }
+
+    function readNum(id, fallback = 0) {
+      const raw = document.getElementById(id).value;
+      if (raw === "") return fallback;
+      const parsed = Number(raw);
+      return Number.isFinite(parsed) ? parsed : fallback;
+    }
+
+    function drawGrid(elId, age, expectancy) {
+      const el = document.getElementById(elId);
+      el.innerHTML = "";
+      const a = clamp(Math.round(age), 0, 100);
+      const e = clamp(Math.round(expectancy), 0, 100);
+
+      for (let i = 1; i <= 100; i++) {
+        const b = document.createElement("div");
+        b.className = "b";
+        if (i <= a) b.classList.add("lived");
+        else if (i <= e) b.classList.add("future");
+        el.appendChild(b);
+      }
+    }
+
+    function signed(n) {
+      return `${n >= 0 ? "+" : ""}${n.toFixed(1)}y`;
+    }
+
+    function aqiAdj(aqi) {
+      if (aqi <= 50) return 0.8;
+      if (aqi <= 100) return -0.5;
+      if (aqi <= 150) return -2.0;
+      if (aqi <= 200) return -4.0;
+      return -6.0;
+    }
+
+    function exerciseAdj(mins) {
+      if (mins >= 60) return 3.0;
+      if (mins >= 45) return 2.2;
+      if (mins >= 30) return 1.4;
+      if (mins >= 15) return 0.4;
+      return -1.2;
+    }
+
+    function estimate(input) {
+      const base = 85;
+      const sleep = clamp(input.sleep, 0, 14);
+      const work = clamp(input.work, 0, 16);
+      const screen = clamp(input.screen, 0, 12);
+      const commute = clamp(input.commute, 0, 6);
+      const diet = clamp(input.diet, 1, 10);
+      const exercise = clamp(input.exercise, 0, 180);
+      const stress = clamp(input.stress, 1, 10);
+      const smoke = clamp(input.smoke, 0, 40);
+      const aqi = clamp(input.aqi, 0, 500);
+
+      const fixed = sleep + work + commute;
+      const free = clamp(24 - fixed, 0, 24);
+      const people = clamp(free - screen, 0, 24);
+      const overflow = Math.max(fixed + screen - 24, 0);
+
+      const sleepImpact = -Math.abs(sleep - 8) * 1.4 + (sleep >= 7 && sleep <= 9 ? 0.8 : 0);
+      const screenImpact = -(Math.max(screen - 2, 0) * 0.7);
+      const workCommuteImpact = -(Math.max(work + commute - 10, 0) * 0.6);
+      const dietImpact = (diet - 5) * 0.8;
+      const exerciseImpact = exerciseAdj(exercise);
+      const stressImpact = -(stress - 4) * 0.7;
+      const smokeImpact = -(smoke * 0.35);
+      const airImpact = aqiAdj(aqi);
+
+      const impacts = [
+        ["Base", base],
+        ["Sleep", sleepImpact],
+        ["Screen time", screenImpact],
+        ["Work + commute load", workCommuteImpact],
+        ["Eating quality", dietImpact],
+        ["Exercise", exerciseImpact],
+        ["Stress", stressImpact],
+        ["Smoking", smokeImpact],
+        ["Air quality (AQI)", airImpact]
+      ];
+
+      const expectancy = clamp(impacts.reduce((sum, item) => sum + item[1], 0), 45, 100);
+      return { expectancy, impacts, free, people, overflow };
+    }
+
+    function renderList(elId, impacts) {
+      const el = document.getElementById(elId);
+      el.innerHTML = "";
+      for (const [label, years] of impacts) {
+        const li = document.createElement("li");
+        const left = document.createElement("span");
+        const right = document.createElement("span");
+        left.textContent = label;
+        right.textContent = signed(years);
+        right.className = years >= 0 ? "pos" : "neg";
+        li.appendChild(left);
+        li.appendChild(right);
+        el.appendChild(li);
+      }
+    }
+
+    function refresh() {
+      const age = clamp(readNum("age", 28), 1, 100);
+
+      const currentInput = {
+        sleep: readNum("sleep", 6.5),
+        work: readNum("work", 9),
+        screen: readNum("screen", 4),
+        commute: readNum("commute", 1),
+        aqi: readNum("aqi", 95),
+        diet: readNum("diet", 5),
+        exercise: readNum("exercise", 15),
+        stress: readNum("stress", 7),
+        smoke: readNum("smoke", 0)
+      };
+
+      const targetAqiRaw = document.getElementById("tAqi").value;
+      const targetInput = {
+        sleep: readNum("tSleep", 8),
+        work: currentInput.work,
+        screen: readNum("tScreen", 1.5),
+        commute: currentInput.commute,
+        aqi: targetAqiRaw === "" ? currentInput.aqi : readNum("tAqi", currentInput.aqi),
+        diet: readNum("tDiet", 8),
+        exercise: readNum("tExercise", 45),
+        stress: readNum("tStress", 4),
+        smoke: readNum("tSmoke", 0)
+      };
+
+      const now = estimate(currentInput);
+      const target = estimate(targetInput);
+
+      document.getElementById("lifeNow").textContent = `${now.expectancy.toFixed(1)}y`;
+      document.getElementById("lifeTarget").textContent = `${target.expectancy.toFixed(1)}y`;
+      document.getElementById("gainYears").textContent = `${(target.expectancy - now.expectancy).toFixed(1)}y`;
+      document.getElementById("yearsLeft").textContent = `${Math.max(now.expectancy - age, 0).toFixed(1)} years left from current`;
+
+      document.getElementById("freeNow").textContent = `Free ${now.free.toFixed(1)}h/day`;
+      document.getElementById("freeTarget").textContent = `Free ${target.free.toFixed(1)}h/day`;
+
+      document.getElementById("phonePeople").textContent = `${currentInput.screen.toFixed(1)}h : ${now.people.toFixed(1)}h`;
+      document.getElementById("phonePeopleTarget").textContent = `Target ${targetInput.screen.toFixed(1)}h : ${target.people.toFixed(1)}h`;
+
+      drawGrid("gridCurrent", age, now.expectancy);
+      drawGrid("gridTarget", age, target.expectancy);
+
+      renderList("listNow", now.impacts);
+      renderList("listTarget", target.impacts);
+
+      const statusLine = document.getElementById("statusLine");
+      if (now.overflow > 0) {
+        statusLine.className = "note warn";
+        statusLine.textContent = `Current routine exceeds 24h by ${now.overflow.toFixed(1)}h/day (including phone). People time is clamped to 0.`;
+      } else {
+        statusLine.className = "note";
+        statusLine.textContent = `Current formula: free = ${now.free.toFixed(1)}h/day, people = ${now.people.toFixed(1)}h/day, expectancy = ${now.expectancy.toFixed(1)}y.`;
+      }
+    }
+
+    allIds.forEach((id) => {
+      const el = document.getElementById(id);
+      el.addEventListener("input", refresh);
+    });
+
+    refresh();
+  </script>
+</body>
+</html>
